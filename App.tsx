@@ -7,7 +7,7 @@ import POS from './views/POS.tsx';
 import Settings from './views/Settings.tsx';
 import { AppMode, AuthState, UserProfile } from './types.ts';
 
-const APP_VERSION = "v2.4.0"; // Version incrémentée
+const APP_VERSION = "v2.5.0";
 
 const App: React.FC = () => {
   const [activeMode, setActiveMode] = useState<AppMode>(AppMode.POS);
