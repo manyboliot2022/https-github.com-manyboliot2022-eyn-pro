@@ -5,19 +5,39 @@ import CostCalculator from './views/CostCalculator.tsx';
 import ProductManager from './views/ProductManager.tsx';
 import POS from './views/POS.tsx';
 import Settings from './views/Settings.tsx';
-import { AppMode, AuthState, UserProfile } from './types.ts';
-import { LogIn, Lock, User as UserIcon } from 'lucide-react';
+import { AppMode, AuthState, UserProfile, PRE_DETECTED_PRODUCTS, Product } from './types.ts';
+import { LogIn, Lock, User as UserIcon, Sparkles } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeMode, setActiveMode] = useState<AppMode>(AppMode.CALCULATOR);
   const [auth, setAuth] = useState<AuthState>({ user: null, isAuthenticated: false });
   const [loginForm, setLoginForm] = useState({ name: '', password: '' });
+  const [isInitializing, setIsInitializing] = useState(false);
 
   useEffect(() => {
-    // Vérifier session existante
+    // 1. Vérifier session existante
     const savedSession = sessionStorage.getItem('eyn_session');
     if (savedSession) {
       setAuth({ user: JSON.parse(savedSession), isAuthenticated: true });
+    }
+
+    // 2. Initialisation automatique du catalogue si vide
+    const existingProducts = localStorage.getItem('eyn_products');
+    if (!existingProducts || JSON.parse(existingProducts).length === 0) {
+      setIsInitializing(true);
+      setTimeout(() => {
+        const initialProducts: Product[] = PRE_DETECTED_PRODUCTS.map(p => ({
+          id: Math.random().toString(36).substr(2, 9),
+          name: p.name,
+          category: p.category,
+          barcode: '',
+          costPrice: 0,
+          sellPrice: 0,
+          stock: 0
+        }));
+        localStorage.setItem('eyn_products', JSON.stringify(initialProducts));
+        setIsInitializing(false);
+      }, 1000);
     }
   }, []);
 
@@ -51,6 +71,19 @@ const App: React.FC = () => {
     setAuth({ user: null, isAuthenticated: false });
     sessionStorage.removeItem('eyn_session');
   };
+
+  // Écran de chargement/initialisation
+  if (isInitializing) {
+    return (
+      <div className="h-full bg-slate-900 flex flex-col items-center justify-center p-8">
+        <div className="text-center space-y-4">
+          <Sparkles className="w-12 h-12 text-yellow-500 animate-pulse mx-auto" />
+          <h2 className="text-white font-black uppercase tracking-widest text-sm">Initialisation du Catalogue...</h2>
+          <p className="text-white/30 text-[10px] uppercase font-bold">Préparation des produits de référence</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!auth.isAuthenticated) {
     return (
