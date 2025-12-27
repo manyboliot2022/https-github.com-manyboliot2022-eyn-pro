@@ -25,31 +25,36 @@ const CostCalculator: React.FC = () => {
     const products: Product[] = JSON.parse(localStorage.getItem('eyn_products') || '[]');
     const existingProduct = products.find(p => p.barcode === code);
 
-    if (existingProduct) {
-      // Si le produit existe, on l'ajoute directement avec ses infos
-      const newItem: OrderItem = {
-        id: Date.now().toString(),
-        name: existingProduct.name,
-        reference: existingProduct.reference,
-        barcode: existingProduct.barcode,
-        buyPrice: existingProduct.costPrice,
-        quantity: 1
-      };
-      setItems([...items, newItem]);
-    } else {
-      // Si le produit n'existe pas, on crée une ligne vide avec le code-barres
-      const newItem: OrderItem = {
-        id: Date.now().toString(),
-        name: '',
-        reference: '',
-        barcode: code,
-        buyPrice: 0,
-        quantity: 1
-      };
-      setItems([...items, newItem]);
-      alert("Nouveau produit détecté ! Veuillez compléter les informations.");
-    }
-    setIsScanning(false);
+    setItems(prevItems => {
+      const existingItemIndex = prevItems.findIndex(i => 
+        (i.barcode === code) || 
+        (existingProduct && i.reference === existingProduct.reference)
+      );
+
+      if (existingItemIndex > -1) {
+        const updatedItems = [...prevItems];
+        updatedItems[existingItemIndex].quantity += 1;
+        return updatedItems;
+      } else {
+        const newItem: OrderItem = existingProduct ? {
+          id: Date.now().toString(),
+          name: existingProduct.name,
+          reference: existingProduct.reference,
+          barcode: existingProduct.barcode,
+          buyPrice: existingProduct.costPrice,
+          quantity: 1
+        } : {
+          id: Date.now().toString(),
+          name: '',
+          reference: '',
+          barcode: code,
+          buyPrice: 0,
+          quantity: 1
+        };
+        return [...prevItems, newItem];
+      }
+    });
+    // On ne ferme plus isScanning ici pour permettre le scan continu
   };
 
   const saveOrder = (status: PurchaseOrder['status'] = 'DRAFT') => {
@@ -150,7 +155,7 @@ const CostCalculator: React.FC = () => {
             <div className="flex gap-2">
               <button onClick={() => setIsScanning(true)} className="bg-yellow-400 text-[#111827] p-3 rounded-2xl shadow-lg active:scale-90 transition-transform flex items-center gap-2">
                 <ScanLine className="w-5 h-5"/>
-                <span className="text-[8px] font-black">SCANNER</span>
+                <span className="text-[8px] font-black uppercase">Scanner en continu</span>
               </button>
               <button onClick={addItem} className="bg-slate-900 text-yellow-400 p-3 rounded-2xl shadow-lg active:scale-90 transition-transform"><Plus className="w-5 h-5"/></button>
             </div>
@@ -217,13 +222,6 @@ const CostCalculator: React.FC = () => {
                 )}
               </div>
           ))}
-          {(JSON.parse(localStorage.getItem('eyn_purchase_orders') || '[]') as PurchaseOrder[])
-            .filter(o => activeTab === 'PENDING' ? o.status !== 'RECEIVED' : o.status === 'RECEIVED').length === 0 && (
-            <div className="py-20 text-center opacity-10">
-              <History className="w-16 h-16 mx-auto mb-4"/>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em]">Aucune commande trouvée</p>
-            </div>
-          )}
         </div>
       )}
     </div>

@@ -32,15 +32,16 @@ const POS: React.FC<{ currentUser: UserProfile | null }> = ({ currentUser }) => 
     );
 
     if (p) {
-      const existing = cart.find(item => item.id === p.id);
-      if (existing) {
-        setCart(cart.map(item => item.id === p.id ? { ...item, quantity: item.quantity + 1 } : item));
-      } else {
-        setCart([...cart, { ...p, quantity: 1 }]);
-      }
+      setCart(prevCart => {
+        const existing = prevCart.find(item => item.id === p.id);
+        if (existing) {
+          return prevCart.map(item => item.id === p.id ? { ...item, quantity: item.quantity + 1 } : item);
+        } else {
+          return [...prevCart, { ...p, quantity: 1 }];
+        }
+      });
       setSearch('');
-      setIsScanning(false);
-    } else if (query.length > 2) {
+    } else if (query.length > 2 && !isScanning) {
       alert("Article non identifié : " + query);
     }
   };
@@ -67,14 +68,12 @@ const POS: React.FC<{ currentUser: UserProfile | null }> = ({ currentUser }) => 
       items: cart.map(i => ({ name: i.name, quantity: i.quantity, price: i.sellPrice }))
     };
     
-    // Mettre à jour le stock réel
     const currentProducts = JSON.parse(localStorage.getItem('eyn_products') || '[]');
     const updatedProducts = currentProducts.map((p: Product) => {
       const cartItem = cart.find(ci => ci.id === p.id);
       return cartItem ? { ...p, stock: Math.max(0, p.stock - cartItem.quantity) } : p;
     });
     localStorage.setItem('eyn_products', JSON.stringify(updatedProducts));
-    
     localStorage.setItem('eyn_transactions', JSON.stringify([newTrans, ...trans]));
     setIsSuccess(true);
   };
@@ -88,15 +87,16 @@ const POS: React.FC<{ currentUser: UserProfile | null }> = ({ currentUser }) => 
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
           <input 
             type="text" 
-            placeholder="Rechercher par Nom ou Code..." 
+            placeholder="Rechercher..." 
             className="w-full bg-white rounded-3xl pl-12 pr-6 py-5 text-sm font-black shadow-sm outline-none border border-slate-50 focus:border-slate-200" 
             value={search} 
             onChange={e => setSearch(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && findAndAdd(search)}
           />
         </div>
-        <button onClick={() => setIsScanning(true)} className="bg-[#111827] text-yellow-400 p-5 rounded-3xl shadow-xl active:scale-90 transition-transform">
+        <button onClick={() => setIsScanning(true)} className="bg-[#111827] text-yellow-400 p-5 rounded-3xl shadow-xl active:scale-90 transition-transform flex items-center gap-2">
           <Barcode className="w-6 h-6" />
+          <span className="text-[8px] font-black uppercase hidden sm:inline">Scanner</span>
         </button>
       </div>
 
@@ -111,7 +111,6 @@ const POS: React.FC<{ currentUser: UserProfile | null }> = ({ currentUser }) => 
             <div key={item.id} className="bg-white p-5 rounded-[2.5rem] flex items-center gap-4 shadow-sm animate-fade border border-slate-50">
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-black uppercase text-slate-800 truncate">{item.name}</p>
-                <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-1">REF: {item.reference}</p>
                 <p className="text-[10px] text-slate-900 font-black mt-1">{(item.sellPrice * item.quantity).toLocaleString()} FG</p>
               </div>
               <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl">
