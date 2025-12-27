@@ -1,13 +1,18 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <title>EYN PRO - Mobile ERP</title>
+    
+    <!-- PWA Meta -->
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-title" content="EYN PRO">
+    <meta name="mobile-web-app-capable" content="yes">
+    
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3050/3050212.png">
 
@@ -18,7 +23,7 @@
         
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: #f1f5f9; 
+            background: #f8fafc; 
             margin: 0;
             padding: 0;
             height: 100vh;
@@ -27,24 +32,27 @@
             -webkit-user-select: none;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         #root { height: 100%; width: 100%; display: flex; flex-direction: column; }
-
-        /* Smooth page transitions */
-        .page-enter { animation: slideUp 0.3s ease-out; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Safe areas for modern phones */
+        .safe-top { padding-top: env(safe-area-inset-top); }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        
+        /* Smooth animations */
+        .page-enter {
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
         @keyframes slideUp {
-            from { transform: translateY(10px); opacity: 0; }
+            from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
 
-        /* Hide scrollbars but allow scrolling */
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Custom safe area for iPhone notches */
-        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-        
         #error-display {
             display: none;
             position: fixed;
@@ -64,9 +72,7 @@
     "react": "https://esm.sh/react@19.0.0",
     "react-dom": "https://esm.sh/react-dom@19.0.0",
     "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "lucide-react": "https://esm.sh/lucide-react@0.460.0?external=react",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/"
+    "lucide-react": "https://esm.sh/lucide-react@0.460.0?external=react"
   }
 }
 </script>
@@ -76,19 +82,5 @@
     <div id="error-display"></div>
     
     <script type="module" src="index.tsx"></script>
-    
-    <script>
-      window.onerror = function(msg, url, lineNo, columnNo, error) {
-        const display = document.getElementById('error-display');
-        if (display) {
-          display.style.display = 'block';
-          display.innerHTML = '<h3 style="font-size:18px;font-weight:bold;margin-bottom:12px">⚠️ Erreur Critique</h3>' + 
-            '<p style="color:#000;margin-bottom:12px">L\'application a rencontré un problème au démarrage.</p>' +
-            '<pre style="background:#f8fafc;padding:12px;border-radius:12px;font-size:11px;border:1px solid #e2e8f0">' + (error?.stack || msg) + '</pre>' +
-            '<button onclick="location.reload()" style="width:100%;background:#0f172a;color:#fff;padding:16px;border-radius:16px;border:none;font-weight:bold;margin-top:16px">Redémarrer l\'App</button>';
-        }
-        return false;
-      };
-    </script>
 </body>
 </html>

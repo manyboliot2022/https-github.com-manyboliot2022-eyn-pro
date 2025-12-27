@@ -2,12 +2,18 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 
+// Enregistrement du Service Worker pour le mode hors-ligne / PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => {
+      console.log('SW registration failed: ', err);
+    });
+  });
+}
+
 const mountApp = () => {
   const container = document.getElementById('root');
-  if (!container) {
-    console.error("Le conteneur #root est manquant.");
-    return;
-  }
+  if (!container) return;
 
   try {
     const root = createRoot(container);
@@ -17,16 +23,10 @@ const mountApp = () => {
       </React.StrictMode>
     );
   } catch (error) {
-    console.error("Erreur lors du rendu initial:", error);
-    const errDisplay = document.getElementById('error-display');
-    if (errDisplay) {
-      errDisplay.style.display = 'block';
-      errDisplay.innerHTML = `<h3>Erreur de Montage</h3><p>${error instanceof Error ? error.message : String(error)}</p>`;
-    }
+    console.error("Mount error:", error);
   }
 };
 
-// On s'assure que le DOM est prêt
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', mountApp);
 } else {
