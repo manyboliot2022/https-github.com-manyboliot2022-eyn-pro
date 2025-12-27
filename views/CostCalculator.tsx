@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, TrendingUp, History, ArrowRight, Calculator as CalcIcon, ShoppingCart, DollarSign, Package, CheckCircle } from 'lucide-react';
+import { Plus, Trash2, TrendingUp, History, ArrowRight, Calculator as CalcIcon, ShoppingCart, DollarSign, Package, CheckCircle, Info } from 'lucide-react';
 import { Order, OrderItem, Product } from '../types.ts';
 
 const CostCalculator: React.FC = () => {
@@ -23,7 +22,7 @@ const CostCalculator: React.FC = () => {
   const chargePerArticle = estimatedMonthlyVolume > 0 ? monthlyCharges / estimatedMonthlyVolume : 0;
 
   const addItem = () => {
-    setItems([...items, { id: Math.random().toString(36).substr(2, 9), name: '', buyPrice: 0, quantity: 1 }]);
+    setItems([{ id: Math.random().toString(36).substr(2, 9), name: '', buyPrice: 0, quantity: 1 }, ...items]);
   };
 
   const updateItem = (id: string, field: keyof OrderItem, value: any) => {
@@ -40,7 +39,6 @@ const CostCalculator: React.FC = () => {
     
     const products: Product[] = JSON.parse(localStorage.getItem('eyn_products') || '[]');
 
-    // 1. Mise à jour du stock et des coûts
     items.forEach(item => {
       const costBasis = item.buyPrice + gpPerArticle + chargePerArticle;
       const existing = products.find(p => p.name.toLowerCase() === item.name.toLowerCase());
@@ -64,7 +62,6 @@ const CostCalculator: React.FC = () => {
 
     localStorage.setItem('eyn_products', JSON.stringify(products));
 
-    // 2. Sauvegarde dans l'historique
     const newOrder: Order = {
       id: Date.now().toString(),
       date: new Date().toISOString(),
@@ -78,14 +75,13 @@ const CostCalculator: React.FC = () => {
     setHistory(newHistory);
     localStorage.setItem('eyn_order_history', JSON.stringify(newHistory));
 
-    // 3. Reset
     setItems([]);
-    alert("✅ Commande enregistrée ! Stock et coûts mis à jour.");
+    alert("✅ Approvisionnement réussi ! Les coûts et stocks sont à jour.");
     setActiveTab('HISTORY');
   };
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-500">
+    <div className="space-y-4 animate-in fade-in duration-500 page-enter">
       <div className="flex bg-slate-200 p-1 rounded-2xl gap-1">
         <button onClick={() => setActiveTab('NEW')} className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'NEW' ? 'bg-white shadow text-slate-900' : 'text-slate-500'}`}>📋 Commande</button>
         <button onClick={() => setActiveTab('ANALYSIS')} className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'ANALYSIS' ? 'bg-white shadow text-slate-900' : 'text-slate-500'}`}>📊 Analyse</button>
@@ -94,45 +90,45 @@ const CostCalculator: React.FC = () => {
 
       {activeTab === 'NEW' && (
         <div className="space-y-4">
-          <div className="bg-slate-900 text-white rounded-3xl p-5 flex justify-between items-center shadow-lg">
+          <div className="bg-slate-900 text-white rounded-[2.5rem] p-6 flex justify-between items-center shadow-xl">
             <div className="text-center">
-              <p className="text-[8px] font-black uppercase opacity-40">Sous-Total</p>
-              <p className="text-sm font-black">{totalBuyPrice.toLocaleString()} FG</p>
+              <p className="text-[8px] font-black uppercase opacity-40 mb-1">Articles</p>
+              <p className="text-xl font-black text-yellow-500">{totalArticles}</p>
             </div>
-            <div className="w-px h-8 bg-white/10"></div>
+            <div className="w-px h-10 bg-white/10"></div>
             <div className="text-center">
-              <p className="text-[8px] font-black uppercase opacity-40">Articles</p>
-              <p className="text-sm font-black text-yellow-500">{totalArticles}</p>
-            </div>
-            <div className="w-px h-8 bg-white/10"></div>
-            <div className="text-center">
-              <p className="text-[8px] font-black uppercase opacity-40">Coût Final</p>
-              <p className="text-sm font-black">{(totalBuyPrice + gpTotal).toLocaleString()} FG</p>
+              <p className="text-[8px] font-black uppercase opacity-40 mb-1">Coût Total</p>
+              <p className="text-xl font-black">{(totalBuyPrice + gpTotal).toLocaleString()} FG</p>
             </div>
           </div>
 
-          <section className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-black text-slate-900 text-xs uppercase tracking-widest flex items-center gap-2">
-                <Plus className="w-4 h-4 text-yellow-500" /> Articles commandés
+          <section className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-100">
+            <div className="flex justify-between items-center mb-6 px-2">
+              <h3 className="font-black text-slate-900 text-[10px] uppercase tracking-[0.2em] flex items-center gap-2">
+                📦 Articles du Colis
               </h3>
-              <button onClick={addItem} className="bg-slate-900 text-white p-2 rounded-xl active:scale-90 transition-transform"><Plus className="w-4 h-4" /></button>
+              <button onClick={addItem} className="bg-slate-900 text-white p-3 rounded-2xl active:scale-90 transition-transform"><Plus className="w-4 h-4" /></button>
             </div>
             
-            <div className="space-y-4">
-              {items.length === 0 && <p className="text-center py-6 text-slate-300 italic text-xs">Aucun article ajouté</p>}
+            <div className="space-y-4 max-h-[40vh] overflow-y-auto hide-scrollbar">
+              {items.length === 0 && (
+                <div className="py-12 text-center text-slate-300">
+                  <Package className="w-10 h-10 mx-auto mb-2 opacity-20" />
+                  <p className="text-[10px] font-black uppercase">Liste vide</p>
+                </div>
+              )}
               {items.map((item) => (
-                <div key={item.id} className="p-4 bg-slate-50 rounded-2xl relative border border-slate-100">
-                  <button onClick={() => deleteItem(item.id)} className="absolute -top-2 -right-2 bg-white text-red-500 p-1.5 rounded-full shadow-md border"><Trash2 className="w-3.5 h-3.5" /></button>
-                  <input type="text" placeholder="Nom produit" className="w-full bg-transparent border-b border-slate-200 py-1 text-sm font-black mb-3 focus:outline-none" value={item.name} onChange={(e) => updateItem(item.id, 'name', e.target.value)} />
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white p-2 rounded-xl">
-                      <label className="text-[8px] font-black text-slate-400 uppercase">Prix Unitaire</label>
-                      <input type="number" className="w-full text-xs font-bold" value={item.buyPrice || ''} onChange={(e) => updateItem(item.id, 'buyPrice', parseFloat(e.target.value))} />
+                <div key={item.id} className="p-4 bg-slate-50 rounded-2xl relative border border-slate-100 animate-in slide-in-from-top-2">
+                  <button onClick={() => deleteItem(item.id)} className="absolute -top-2 -right-2 bg-white text-red-500 p-2 rounded-full shadow-lg border-2 border-slate-50"><Trash2 className="w-3.5 h-3.5" /></button>
+                  <input type="text" placeholder="Ex: Vaseline Intensive" className="w-full bg-transparent border-b-2 border-slate-100 py-2 text-sm font-black mb-4 focus:border-yellow-500 focus:outline-none transition-colors" value={item.name} onChange={(e) => updateItem(item.id, 'name', e.target.value)} />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white p-3 rounded-2xl shadow-sm">
+                      <label className="text-[8px] font-black text-slate-400 uppercase block mb-1">Prix Unitaire</label>
+                      <input type="number" className="w-full text-xs font-black text-slate-900" value={item.buyPrice || ''} onChange={(e) => updateItem(item.id, 'buyPrice', parseFloat(e.target.value))} />
                     </div>
-                    <div className="bg-white p-2 rounded-xl">
-                      <label className="text-[8px] font-black text-slate-400 uppercase">Quantité</label>
-                      <input type="number" className="w-full text-xs font-bold" value={item.quantity || ''} onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value))} />
+                    <div className="bg-white p-3 rounded-2xl shadow-sm">
+                      <label className="text-[8px] font-black text-slate-400 uppercase block mb-1">Quantité</label>
+                      <input type="number" className="w-full text-xs font-black text-slate-900" value={item.quantity || ''} onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value))} />
                     </div>
                   </div>
                 </div>
@@ -140,97 +136,69 @@ const CostCalculator: React.FC = () => {
             </div>
           </section>
 
-          <section className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 space-y-4">
-            <h3 className="font-black text-slate-900 text-xs uppercase tracking-widest flex items-center gap-2">
-              <CalcIcon className="w-4 h-4 text-yellow-500" /> Frais & Charges
+          <section className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-100 space-y-5">
+            <h3 className="font-black text-slate-900 text-[10px] uppercase tracking-[0.2em] flex items-center gap-2 px-2">
+              🚚 Frais Additionnels
             </h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-50 p-3 rounded-2xl">
-                <label className="text-[8px] font-black text-slate-400 uppercase">GP Colis Total</label>
-                <input type="number" className="w-full bg-transparent text-xs font-black text-slate-900" value={gpTotal} onChange={(e) => setGpTotal(parseFloat(e.target.value))} />
-                <p className="text-[7px] font-bold text-yellow-600 mt-1">~ {gpPerArticle.toFixed(0)} FG/Art</p>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <label className="text-[8px] font-black text-slate-400 uppercase block mb-1">GP Colis (Expédition)</label>
+                <input type="number" className="w-full bg-transparent text-sm font-black text-slate-900" value={gpTotal} onChange={(e) => setGpTotal(parseFloat(e.target.value))} />
+                <div className="mt-2 text-[8px] font-black bg-yellow-500 text-slate-900 px-2 py-0.5 rounded-md inline-block">+{gpPerArticle.toFixed(0)} FG / art</div>
               </div>
-              <div className="bg-slate-50 p-3 rounded-2xl">
-                <label className="text-[8px] font-black text-slate-400 uppercase">Charges Mensuelles</label>
-                <input type="number" className="w-full bg-transparent text-xs font-black text-slate-900" value={monthlyCharges} onChange={(e) => setMonthlyCharges(parseFloat(e.target.value))} />
-                <p className="text-[7px] font-bold text-yellow-600 mt-1">~ {chargePerArticle.toFixed(0)} FG/Art</p>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <label className="text-[8px] font-black text-slate-400 uppercase block mb-1">Charges Locales</label>
+                <input type="number" className="w-full bg-transparent text-sm font-black text-slate-900" value={monthlyCharges} onChange={(e) => setMonthlyCharges(parseFloat(e.target.value))} />
+                <div className="mt-2 text-[8px] font-black bg-slate-900 text-white px-2 py-0.5 rounded-md inline-block">+{chargePerArticle.toFixed(0)} FG / art</div>
               </div>
             </div>
           </section>
 
-          <button onClick={saveToCatalog} className="w-full bg-yellow-500 text-slate-900 font-black py-5 rounded-3xl flex items-center justify-center gap-3 shadow-xl active:scale-95 transition-all uppercase tracking-widest text-xs">
-            <ArrowRight className="w-5 h-5" /> Enregistrer l'Approvisionnement
+          <button onClick={saveToCatalog} className="w-full bg-yellow-500 text-slate-900 font-black py-6 rounded-3xl flex items-center justify-center gap-3 shadow-xl active:scale-95 transition-all uppercase tracking-widest text-[11px] mb-24">
+            <ArrowRight className="w-6 h-6" /> Mettre à jour le Stock & Coûts
           </button>
         </div>
       )}
 
-      {activeTab === 'HISTORY' && (
-        <div className="space-y-3">
-          {history.length === 0 ? (
-            <div className="p-20 text-center opacity-20"><History className="w-12 h-12 mx-auto mb-2" /><p className="text-xs font-black uppercase">Aucun historique</p></div>
-          ) : (
-            history.map(order => (
-              <div key={order.id} className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm space-y-3">
-                <div className="flex justify-between items-center border-b border-slate-50 pb-3">
-                  <div>
-                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{new Date(order.date).toLocaleDateString()}</p>
-                    <p className="text-xs font-black text-slate-900">{order.items.length} articles différents</p>
-                  </div>
-                  <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-black">REÇU</div>
-                </div>
-                <div className="space-y-1">
-                  {order.items.map((it, idx) => (
-                    <div key={idx} className="flex justify-between text-[10px] font-bold text-slate-600">
-                      <span>{it.name} x{it.quantity}</span>
-                      <span>{(it.buyPrice * it.quantity).toLocaleString()} FG</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="pt-2 flex justify-between items-center text-slate-900 font-black">
-                   <span className="text-[9px] uppercase tracking-widest text-slate-400">Total + GP</span>
-                   <span className="text-sm">{order.totalCost.toLocaleString()} FG</span>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-
       {activeTab === 'ANALYSIS' && (
-        <div className="space-y-4">
-          {items.length === 0 && <p className="text-center py-20 text-slate-300 italic text-xs">Ajoutez des articles dans l'onglet Commande pour les analyser.</p>}
+        <div className="space-y-4 pb-24 page-enter">
+          {items.length === 0 && (
+            <div className="py-32 text-center opacity-20">
+              <TrendingUp className="w-16 h-16 mx-auto mb-4" />
+              <p className="text-xs font-black uppercase tracking-widest">Aucune donnée à analyser</p>
+            </div>
+          )}
           {items.map(item => {
             const unitCost = item.buyPrice + gpPerArticle + chargePerArticle;
             return (
-              <div key={item.id} className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden animate-in slide-in-from-right duration-300">
-                <div className="bg-slate-900 p-5 flex justify-between items-center">
-                   <h4 className="text-white font-black text-sm uppercase">{item.name || 'Produit'}</h4>
-                   <div className="text-right">
-                     <p className="text-[8px] text-yellow-500 font-black uppercase">Coût de Revient</p>
-                     <p className="text-lg font-black text-white">{unitCost.toLocaleString()} FG</p>
+              <div key={item.id} className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                <div className="bg-slate-900 p-6 flex justify-between items-center text-white">
+                   <div className="min-w-0 pr-4">
+                     <h4 className="font-black text-sm uppercase truncate mb-1">{item.name || 'Produit'}</h4>
+                     <p className="text-[8px] font-bold text-white/40 uppercase tracking-widest italic">Analyse du profit unitaire</p>
+                   </div>
+                   <div className="text-right shrink-0">
+                     <p className="text-[8px] text-yellow-500 font-black uppercase mb-1">Coût de Revient</p>
+                     <p className="text-xl font-black">{unitCost.toLocaleString()} FG</p>
                    </div>
                 </div>
-                <div className="p-6 space-y-3">
-                   <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-400 mb-2">
-                     <div className="flex justify-between bg-slate-50 p-2 rounded-lg"><span>Achat:</span> <span className="text-slate-900">{item.buyPrice}</span></div>
-                     <div className="flex justify-between bg-slate-50 p-2 rounded-lg"><span>GP:</span> <span className="text-slate-900">{gpPerArticle.toFixed(0)}</span></div>
-                   </div>
-                   
+                
+                <div className="p-6 space-y-3 bg-slate-50/50">
                    {[
-                     { m: 0, l: 'Prix Coûtant', c: 'border-red-500 text-red-500 bg-red-50', note: 'PERTE' },
-                     { m: 0.2, l: 'Petit Profit', c: 'border-slate-200 text-slate-700 bg-slate-50', note: 'RISQUÉ' },
-                     { m: 0.3, l: 'Recommandé', c: 'border-green-500 text-green-700 bg-green-50', note: 'BON ✅' },
-                     { m: 0.5, l: 'Bon Profit', c: 'border-blue-500 text-blue-700 bg-blue-50', note: 'TOP ✅' },
-                     { m: 1.0, l: 'Double', c: 'border-purple-500 text-purple-700 bg-purple-50', note: 'MAX ✅' }
+                     { m: 0, l: 'Prix Coûtant', c: 'border-red-500/20 text-red-600 bg-red-50', note: '⚠️ PERTE : Pas de gain' },
+                     { m: 0.2, l: 'Petit Profit', c: 'border-slate-200 text-slate-600 bg-white', note: '⚠️ FAIBLE : Risque élevé' },
+                     { m: 0.3, l: 'Marge Recommandée', c: 'border-green-500 text-green-700 bg-green-50', note: '✅ BON : Profit équilibré' },
+                     { m: 0.5, l: 'Marge Confort', c: 'border-blue-500 text-blue-700 bg-blue-50', note: '✨ TOP : Très rentable' },
+                     { m: 1.0, l: 'Double Profit', c: 'border-purple-500 text-purple-700 bg-purple-50', note: '🔥 MAX : Excellent gain' }
                    ].map(opt => (
-                     <div key={opt.m} className={`flex justify-between items-center p-4 rounded-2xl border-2 ${opt.c}`}>
-                       <div>
-                         <span className="text-[10px] font-black uppercase">{opt.l} ({opt.m * 100}%)</span>
-                         <p className="text-[8px] font-bold opacity-60 mt-1">{opt.note}</p>
+                     <div key={opt.m} className={`flex justify-between items-center p-4 rounded-2xl border-2 shadow-sm transition-all ${opt.c}`}>
+                       <div className="min-w-0 pr-3">
+                         <span className="text-[10px] font-black uppercase tracking-tight">{opt.l} ({opt.m * 100}%)</span>
+                         <p className="text-[7px] font-black uppercase mt-1 opacity-70">{opt.note}</p>
                        </div>
-                       <div className="text-right">
-                         <p className="text-lg font-black">{Math.round(unitCost * (1 + opt.m)).toLocaleString()} FG</p>
-                         <p className="text-[9px] font-bold">+ {Math.round(unitCost * opt.m).toLocaleString()} /unité</p>
+                       <div className="text-right shrink-0">
+                         <p className="text-lg font-black tracking-tight">{Math.round(unitCost * (1 + opt.m)).toLocaleString()} FG</p>
+                         <p className="text-[8px] font-bold opacity-60">+ {Math.round(unitCost * opt.m).toLocaleString()} profit / art</p>
                        </div>
                      </div>
                    ))}
@@ -238,6 +206,38 @@ const CostCalculator: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {activeTab === 'HISTORY' && (
+        <div className="space-y-3 pb-24 page-enter">
+          {history.length === 0 ? (
+            <div className="py-32 text-center opacity-20"><History className="w-16 h-16 mx-auto mb-2" /><p className="text-xs font-black uppercase">Aucun historique</p></div>
+          ) : (
+            history.map(order => (
+              <div key={order.id} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-50 pb-4">
+                  <div>
+                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1">{new Date(order.date).toLocaleDateString()}</p>
+                    <p className="text-xs font-black text-slate-900">{order.items.length} références d'articles</p>
+                  </div>
+                  <div className="bg-green-100 text-green-700 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest">Réceptionné</div>
+                </div>
+                <div className="space-y-2">
+                  {order.items.map((it, idx) => (
+                    <div key={idx} className="flex justify-between text-[10px] font-bold text-slate-600">
+                      <span className="truncate mr-4">{it.name} x{it.quantity}</span>
+                      <span className="shrink-0">{(it.buyPrice * it.quantity).toLocaleString()} FG</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="pt-4 border-t border-slate-50 flex justify-between items-center text-slate-900 font-black">
+                   <span className="text-[9px] uppercase tracking-[0.2em] text-slate-400">Total Colis + GP</span>
+                   <span className="text-lg">{order.totalCost.toLocaleString()} FG</span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>

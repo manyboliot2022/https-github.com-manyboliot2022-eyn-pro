@@ -3,41 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>EYN PRO - Gestion Boutique</title>
-    <meta name="theme-color" content="#eab308">
+    <title>EYN PRO - Mobile ERP</title>
+    <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3050/3050212.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
         body { 
-            font-family: 'Inter', sans-serif; 
-            background: #f8fafc; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: #f1f5f9; 
             margin: 0;
             padding: 0;
             height: 100vh;
             width: 100vw;
             overflow: hidden;
-            -webkit-font-smoothing: antialiased;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        #root { height: 100%; width: 100%; }
+
+        #root { height: 100%; width: 100%; display: flex; flex-direction: column; }
+
+        /* Smooth page transitions */
+        .page-enter { animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Hide scrollbars but allow scrolling */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Custom safe area for iPhone notches */
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        
         #error-display {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: #fff;
-            padding: 20px;
+            padding: 24px;
             z-index: 9999;
             color: #ef4444;
             overflow: auto;
             font-family: monospace;
-            font-size: 12px;
         }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 
     <script type="importmap">
@@ -64,11 +82,10 @@
         const display = document.getElementById('error-display');
         if (display) {
           display.style.display = 'block';
-          display.innerHTML = '<h3 style="margin-top:0">Erreur Critique</h3>' + 
-            '<p style="color:black">L\'application n\'a pas pu démarrer.</p>' +
-            '<p><b>Message:</b> ' + msg + '</p>' +
-            '<pre style="background:#f1f5f9;padding:10px;border-radius:8px">' + (error?.stack || 'Pas de stack trace') + '</pre>' +
-            '<button onclick="location.reload()" style="background:#000;color:#fff;padding:10px 20px;border-radius:8px;border:none;font-weight:bold;margin-top:10px">Réessayer</button>';
+          display.innerHTML = '<h3 style="font-size:18px;font-weight:bold;margin-bottom:12px">⚠️ Erreur Critique</h3>' + 
+            '<p style="color:#000;margin-bottom:12px">L\'application a rencontré un problème au démarrage.</p>' +
+            '<pre style="background:#f8fafc;padding:12px;border-radius:12px;font-size:11px;border:1px solid #e2e8f0">' + (error?.stack || msg) + '</pre>' +
+            '<button onclick="location.reload()" style="width:100%;background:#0f172a;color:#fff;padding:16px;border-radius:16px;border:none;font-weight:bold;margin-top:16px">Redémarrer l\'App</button>';
         }
         return false;
       };
