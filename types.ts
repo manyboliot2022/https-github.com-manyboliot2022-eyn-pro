@@ -4,135 +4,119 @@ export interface Product {
   name: string;
   category: string;
   familyId?: string;
-  description?: string;
-  volume?: string;
-  imageUrl?: string;
   barcode: string;
-  costPrice: number; // Utilisé comme PMP
+  costPrice: number; // Prix d'achat unitaire initial
+  realCost: number; // Coût de revient calculé (Achat + GP + Charges)
   sellPrice: number;
   stock: number;
-  supplierId?: string;
-  lastUpdated?: string;
+  imageUrl?: string;
 }
 
 export interface Family {
   id: string;
   name: string;
-  icon?: string;
-}
-
-export interface UserProfile {
-  id: string;
-  name: string;
-  role: 'ADMIN' | 'VENDEUR';
-  password?: string;
-  isActive: boolean;
-}
-
-export interface AuthState {
-  user: UserProfile | null;
-  isAuthenticated: boolean;
 }
 
 export interface Supplier {
   id: string;
   name: string;
   phone: string;
-  category: string;
+  // Added optional category field for supplier management
+  category?: string;
 }
 
 export interface Client {
   id: string;
   name: string;
-  address: string;
   phone: string;
   balance: number;
+  // Added optional address field for client management
+  address?: string;
 }
 
-export type PaymentMethod = 'OM' | 'MTN' | 'CASH_GNF' | 'USD' | 'EUR' | 'CFA';
+// UserProfile defines the structure of the authenticated user
+export interface UserProfile {
+  id: string;
+  name: string;
+  role: 'ADMIN' | 'USER';
+  isActive: boolean;
+}
 
+// AuthState tracks the authentication status in the main App component
+export interface AuthState {
+  user: UserProfile | null;
+  isAuthenticated: boolean;
+}
+
+export interface OrderItem {
+  id: string;
+  name: string;
+  buyPrice: number;
+  quantity: number;
+}
+
+// Transaction defines the structure for both sales (IN) and expenses (OUT)
 export interface Transaction {
   id: string;
   date: string;
   userId: string;
   type: 'IN' | 'OUT';
   amount: number;
-  method: PaymentMethod;
+  method: string;
   description: string;
   category: string;
-  clientId?: string;
-  items?: { name: string, quantity: number, price: number }[];
-}
-
-export interface OrderItem {
-  id: string;
-  productId?: string; // Référence à un produit existant
-  name: string;
-  buyPrice: number;
-  oldBuyPrice?: number;
-  quantity: number;
-  received?: boolean;
+  items?: { name: string; quantity: number; price: number }[];
 }
 
 export interface Order {
   id: string;
   date: string;
-  userId: string;
   items: OrderItem[];
   gpTotal: number;
   chargesTotal: number;
   totalArticles: number;
   totalCost: number;
-  supplierId?: string;
-  origin?: string;
-  expectedDeliveryDate?: string;
-  reference?: string;
-  status: 'PENDING' | 'RECEIVED' | 'CANCELLED';
 }
 
+// CompanySettings for branding and identity
+export interface CompanySettings {
+  name: string;
+  phone: string;
+  address: string;
+  logo?: string;
+  whatsappEnabled: boolean;
+}
+
+// Default brand information used in settings and finance views
+export const DEFAULT_BRAND_INFO: CompanySettings = {
+  name: 'EYN PRO',
+  phone: '',
+  address: '',
+  whatsappEnabled: true
+};
+
 export const AppMode = {
-  CALCULATOR: 'CALCULATOR',
-  MANAGER: 'MANAGER',
-  POS: 'POS',
+  CALCULATOR: 'ARRIVAGE',
+  MANAGER: 'STOCK',
+  POS: 'VENTE',
   ADMIN: 'ADMIN'
 } as const;
 
 export type AppMode = typeof AppMode[keyof typeof AppMode];
 
-export interface CompanySettings {
-  name: string;
-  tagline: string;
-  phoneGn: string;
-  phoneSn: string;
-  whatsapp: string;
-  socials: string;
-  mapAddress: string;
-  logoUrl: string;
-}
-
-export const DEFAULT_BRAND_INFO: CompanySettings = {
-  name: "EYN PRO",
-  tagline: "Tout ce dont vous avez besoin",
-  phoneGn: "+224 625 24 53 50",
-  phoneSn: "+221 77 588 99 48",
-  whatsapp: "224625245350",
-  socials: "Everytinguned",
-  mapAddress: "Conakry, Guinée",
-  logoUrl: "https://cdn-icons-png.flaticon.com/512/3050/3050212.png"
-};
-
 export const PRE_DETECTED_PRODUCTS = [
-  { name: 'Nivea Soft 200ml', category: 'Crème' },
+  { name: 'Vaseline Intensive Care', category: 'Corps' },
+  { name: 'Vaseline Healing Jelly', category: 'Corps' },
+  { name: 'Vaseline Aloe Vera', category: 'Corps' },
+  { name: 'Nivea Cream Blue Tin', category: 'Visage' },
+  { name: 'Nivea Soft', category: 'Visage' },
+  { name: 'Cerave Hydrating Cleanser', category: 'Nettoyant' },
+  { name: 'Cerave Moisturizing Cream', category: 'Crème' },
+  { name: 'Ponds Gold Radiance', category: 'Soin Luxe' },
   { name: 'Savon Dudu Osun', category: 'Savon' },
-  { name: 'Lait Clarifiant 500ml', category: 'Lotion' },
-  { name: 'Garnier BB Cream', category: 'Maquillage' },
-  { name: 'Vaseline Petroleum Jelly', category: 'Soin' }
-];
-
-export const INITIAL_FAMILIES: Family[] = [
-  { id: 'fam1', name: 'Soins Visage' },
-  { id: 'fam2', name: 'Corps & Bain' },
-  { id: 'fam3', name: 'Parfumerie' },
-  { id: 'fam4', name: 'Maquillage' },
-  { id: 'fam5', name: 'Capillaire' }
+  { name: 'Garnier Vitamin C Serum', category: 'Sérum' },
+  { name: 'Fair & White Lait', category: 'Lotion' },
+  { name: 'Bio Oil 60ml', category: 'Huile' },
+  { name: 'Dove Beauty Bar', category: 'Savon' },
+  { name: 'Palmers Cocoa Butter', category: 'Corps' }
 ];

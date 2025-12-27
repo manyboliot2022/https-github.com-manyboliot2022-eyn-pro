@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { X, ArrowRight } from 'lucide-react';
+import { X, ArrowRight, Camera, RefreshCw } from 'lucide-react';
+import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -8,87 +8,81 @@ interface BarcodeScannerProps {
   title?: string;
 }
 
-const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose, title = "Scanner un code" }) => {
+const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose, title = "SCANNER UN CODE" }) => {
   const [manualCode, setManualCode] = useState('');
+  const [hasError, setHasError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  
+  const hints = new Map();
+  hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+    BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.CODE_128, 
+    BarcodeFormat.QR_CODE, BarcodeFormat.UPC_A
+  ]);
+  hints.set(DecodeHintType.TRY_HARDER, true);
+  
+  const codeReader = useRef(new BrowserMultiFormatReader(hints));
 
   useEffect(() => {
-    async function startCamera() {
+    let isMounted = true;
+    async function init() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } 
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+        const devices = await codeReader.current.listVideoInputDevices();
+        const back = devices.find(d => /back|arrière|0/.test(d.label.toLowerCase())) || devices[devices.length - 1] || devices[0];
+        
+        if (isMounted && videoRef.current) {
+          codeReader.current.decodeFromConstraints(
+            { video: { deviceId: back.deviceId, facingMode: 'environment', width: { ideal: 1280 } } },
+            videoRef.current,
+            (result) => {
+              if (result && isMounted) {
+                if (navigator.vibrate) navigator.vibrate(100);
+                onScan(result.getText());
+                codeReader.current.reset();
+              }
+            }
+          );
         }
       } catch (e) {
-        console.error("Caméra non accessible", e);
-        alert("Erreur d'accès à la caméra. Vérifiez les permissions.");
+        setHasError(true);
       }
     }
-    startCamera();
-    return () => {
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach(t => t.stop());
-      }
-    };
-  }, []);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (manualCode) {
-      onScan(manualCode);
-      setManualCode('');
-    }
-  };
+    init();
+    return () => { isMounted = false; codeReader.current.reset(); };
+  }, [onScan]);
 
   return (
-    <div className="fixed inset-0 z-[200] bg-black flex flex-col animate-in fade-in duration-300">
-      <div className="p-6 flex justify-between items-center text-white z-10">
-        <button onClick={onClose} className="bg-white/10 p-2 rounded-full active:scale-90 transition-transform">
-          <X className="w-6 h-6"/>
-        </button>
-        <h2 className="text-xs font-black uppercase tracking-widest">{title}</h2>
-        <div className="w-10"></div>
+    <div className="fixed inset-0 z-[999] bg-black flex flex-col animate-fade overflow-hidden">
+      <div className="p-6 flex justify-between items-center text-white z-20 safe-top">
+        <button onClick={onClose} className="p-2"><X className="w-6 h-6"/></button>
+        <h2 className="text-[11px] font-black uppercase tracking-[0.3em]">{title}</h2>
+        <button onClick={() => window.location.reload()} className="p-2 opacity-20"><RefreshCw className="w-4 h-4"/></button>
       </div>
 
-      <div className="flex-1 relative overflow-hidden flex items-center justify-center">
-        <video 
-          ref={videoRef} 
-          autoPlay 
-          playsInline 
-          className="absolute inset-0 w-full h-full object-cover opacity-60" 
-        />
-        <div className="relative w-64 h-48 border-2 border-yellow-500 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(234,179,8,0.3)]">
-          <div className="absolute w-full h-0.5 bg-yellow-500 top-1/2 left-0 shadow-[0_0_15px_#eab308] animate-[scanLine_2s_infinite_ease-in-out]"></div>
-        </div>
-        <p className="absolute bottom-10 text-white/50 text-[10px] font-black uppercase tracking-widest animate-pulse">
-          Visez le code-barres
-        </p>
+      <div className="flex-1 relative flex items-center justify-center">
+        {hasError ? (
+          <div className="text-center p-10 space-y-4">
+             <Camera className="w-12 h-12 text-white/10 mx-auto" />
+             <p className="text-white/30 text-[9px] font-black uppercase tracking-widest">Caméra inaccessible</p>
+          </div>
+        ) : (
+          <>
+            <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" playsInline muted />
+            <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
+            <div className="relative w-72 h-48 border-2 border-yellow-400 rounded-[2.5rem] overflow-hidden shadow-[0_0_0_2000px_rgba(0,0,0,0.4)]">
+              <div className="absolute w-full h-0.5 bg-yellow-400 shadow-[0_0_15px_#facc15] animate-[scanLaser_2.5s_infinite_linear]"></div>
+            </div>
+            <p className="absolute bottom-24 text-white font-black text-[9px] uppercase tracking-[0.4em] opacity-60">Alignez le code dans le cadre</p>
+          </>
+        )}
       </div>
 
-      <div className="p-8 bg-slate-900 rounded-t-[3rem] safe-bottom shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <input 
-            autoFocus 
-            className="flex-1 bg-white/10 border-none rounded-2xl p-4 text-white text-sm font-bold placeholder:text-white/20 focus:ring-2 ring-yellow-500 transition-all" 
-            placeholder="Code manuel..." 
-            value={manualCode} 
-            onChange={e => setManualCode(e.target.value)} 
-          />
-          <button type="submit" className="bg-yellow-500 text-slate-900 p-4 rounded-2xl shadow-lg active:scale-95 transition-transform">
-            <ArrowRight className="w-6 h-6"/>
-          </button>
+      <div className="p-8 pb-12 bg-[#1a1f2e] rounded-t-[3.5rem] safe-bottom shadow-[0_-30px_60px_rgba(0,0,0,0.8)] border-t border-white/5">
+        <form onSubmit={e => { e.preventDefault(); onScan(manualCode); }} className="flex gap-3">
+          <input type="text" className="flex-1 bg-white/5 border border-white/10 rounded-2xl py-5 px-6 text-white text-sm font-bold placeholder:text-white/20 outline-none" placeholder="Code manuel..." value={manualCode} onChange={e => setManualCode(e.target.value)} />
+          <button type="submit" className="bg-yellow-400 text-[#111827] w-14 h-14 rounded-2xl flex items-center justify-center active:scale-90 transition-transform"><ArrowRight className="w-6 h-6"/></button>
         </form>
       </div>
-      
-      <style>{`
-        @keyframes scanLine {
-          0%, 100% { top: 10%; }
-          50% { top: 90%; }
-        }
-      `}</style>
+      <style>{`@keyframes scanLaser { 0% { transform: translateY(-120px); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(120px); opacity: 0; } }`}</style>
     </div>
   );
 };

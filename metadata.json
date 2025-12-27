@@ -1,6 +1,6 @@
 {
-  "name": "EYN POS Pro & Calculator",
-  "description": "Système complet de gestion de produits, calculateur de coûts professionnel et point de vente mobile-first pour le commerce de cosmétiques.",
+  "name": "EYN PRO ERP v2.4",
+  "description": "Système de gestion professionnel pour cosmétiques avec calculateur de coût réel et import de catalogue intelligent.",
   "requestFramePermissions": [
     "camera"
   ]
