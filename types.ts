@@ -3,12 +3,22 @@ export interface Product {
   id: string;
   name: string;
   category: string;
+  familyId?: string;
+  description?: string;
+  volume?: string;
+  imageUrl?: string;
   barcode: string;
-  costPrice: number;
+  costPrice: number; // Utilisé comme PMP
   sellPrice: number;
   stock: number;
   supplierId?: string;
   lastUpdated?: string;
+}
+
+export interface Family {
+  id: string;
+  name: string;
+  icon?: string;
 }
 
 export interface UserProfile {
@@ -22,16 +32,6 @@ export interface UserProfile {
 export interface AuthState {
   user: UserProfile | null;
   isAuthenticated: boolean;
-}
-
-export interface SyncState {
-  lastSync: string | null;
-  isPending: boolean;
-}
-
-export interface Family {
-  id: string;
-  name: string;
 }
 
 export interface Supplier {
@@ -54,7 +54,7 @@ export type PaymentMethod = 'OM' | 'MTN' | 'CASH_GNF' | 'USD' | 'EUR' | 'CFA';
 export interface Transaction {
   id: string;
   date: string;
-  userId: string; // Qui a fait la transaction
+  userId: string;
   type: 'IN' | 'OUT';
   amount: number;
   method: PaymentMethod;
@@ -66,9 +66,10 @@ export interface Transaction {
 
 export interface OrderItem {
   id: string;
-  productId?: string;
+  productId?: string; // Référence à un produit existant
   name: string;
   buyPrice: number;
+  oldBuyPrice?: number;
   quantity: number;
   received?: boolean;
 }
@@ -125,12 +126,13 @@ export const PRE_DETECTED_PRODUCTS = [
   { name: 'Savon Dudu Osun', category: 'Savon' },
   { name: 'Lait Clarifiant 500ml', category: 'Lotion' },
   { name: 'Garnier BB Cream', category: 'Maquillage' },
-  { name: 'Vaseline Petroleum Jelly', category: 'Soin' },
-  { name: 'Shampoing Dop Œuf', category: 'Cheveux' },
-  { name: 'Dentifrice Signal 75ml', category: 'Hygiène' },
-  { name: 'Déodorant Nivea Men', category: 'Hygiène' },
-  { name: 'Parfum Sauvage 100ml', category: 'Parfumerie' },
-  { name: 'Huile d\'Amande Douce', category: 'Huile' },
-  { name: 'Crème Visage 21', category: 'Soin' },
-  { name: 'Savon Noir Liquide', category: 'Savon' }
+  { name: 'Vaseline Petroleum Jelly', category: 'Soin' }
+];
+
+export const INITIAL_FAMILIES: Family[] = [
+  { id: 'fam1', name: 'Soins Visage' },
+  { id: 'fam2', name: 'Corps & Bain' },
+  { id: 'fam3', name: 'Parfumerie' },
+  { id: 'fam4', name: 'Maquillage' },
+  { id: 'fam5', name: 'Capillaire' }
 ];
