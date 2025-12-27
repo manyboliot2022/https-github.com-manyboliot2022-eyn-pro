@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Building, ChevronRight, LogOut, LayoutGrid, Briefcase, Plus, Trash2, Phone, UserPlus, X, Wallet, ShieldCheck, Tag } from 'lucide-react';
+import { Building, ChevronRight, LogOut, LayoutGrid, Briefcase, Plus, Trash2, Phone, UserPlus, X, Wallet, ShieldCheck, Tag, AlertTriangle } from 'lucide-react';
 import { Supplier, Client, Family } from '../types.ts';
 import Finance from './Finance.tsx';
 
 interface SettingsProps { onLogout: () => void; }
+
+type DeleteTarget = { id: string, name: string, type: 'SUPPLIER' | 'CLIENT' | 'FAMILY' } | null;
 
 const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
   const [activeMenu, setActiveMenu] = useState<'PARTNERS' | 'FINANCE' | 'FAMILIES' | null>(null);
@@ -13,6 +15,7 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
   const [families, setFamilies] = useState<Family[]>([]);
   const [partnerTab, setPartnerTab] = useState<'SUPPLIER' | 'CLIENT'>('SUPPLIER');
   const [form, setForm] = useState({ name: '', phone: '', detail: '' });
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
 
   useEffect(() => {
     setSuppliers(JSON.parse(localStorage.getItem('eyn_suppliers') || '[]'));
@@ -44,6 +47,31 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
     setForm({ name: '', phone: '', detail: '' });
   };
 
+  const executeDelete = () => {
+    if (!deleteTarget) return;
+
+    if (deleteTarget.type === 'FAMILY') {
+      const up = families.filter(x => x.id !== deleteTarget.id);
+      setFamilies(up);
+      localStorage.setItem('eyn_families', JSON.stringify(up));
+    } else if (deleteTarget.type === 'SUPPLIER') {
+      const up = suppliers.filter(x => x.id !== deleteTarget.id);
+      setSuppliers(up);
+      localStorage.setItem('eyn_suppliers', JSON.stringify(up));
+    } else if (deleteTarget.type === 'CLIENT') {
+      const up = clients.filter(x => x.id !== deleteTarget.id);
+      setClients(up);
+      localStorage.setItem('eyn_clients', JSON.stringify(up));
+    }
+
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = (id: string, name: string, type: 'SUPPLIER' | 'CLIENT' | 'FAMILY') => {
+    if (navigator.vibrate) navigator.vibrate(10);
+    setDeleteTarget({ id, name, type });
+  };
+
   if (activeMenu === 'FAMILIES') return (
     <div className="space-y-6 animate-fade">
       <button onClick={() => setActiveMenu(null)} className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400"><ChevronRight className="rotate-180 w-5 h-5"/> Retour Admin</button>
@@ -58,10 +86,13 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
         {families.map(f => (
           <div key={f.id} className="bg-white p-5 rounded-[2.5rem] flex justify-between items-center shadow-sm border border-slate-50">
             <span className="text-[10px] font-black uppercase text-slate-800">{f.name}</span>
-            <button onClick={() => { const up = families.filter(x => x.id !== f.id); setFamilies(up); localStorage.setItem('eyn_families', JSON.stringify(up)); }} className="text-red-200"><Trash2 className="w-4 h-4"/></button>
+            <button onClick={() => confirmDelete(f.id, f.name, 'FAMILY')} className="p-3 text-red-100 hover:text-red-500 transition-colors">
+              <Trash2 className="w-4 h-4"/>
+            </button>
           </div>
         ))}
       </div>
+      {deleteTarget && <DeleteConfirmationModal target={deleteTarget} onCancel={() => setDeleteTarget(null)} onConfirm={executeDelete} />}
     </div>
   );
 
@@ -97,10 +128,13 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
               <h4 className="text-[10px] font-black uppercase text-slate-800">{p.name}</h4>
               <p className="text-[8px] font-bold text-slate-400">{p.phone || 'Pas de numéro'}</p>
             </div>
-            <button onClick={() => { const up = partnerTab === 'SUPPLIER' ? suppliers.filter(x => x.id !== p.id) : clients.filter(x => x.id !== p.id); if(partnerTab === 'SUPPLIER') { setSuppliers(up); localStorage.setItem('eyn_suppliers', JSON.stringify(up)); } else { setClients(up); localStorage.setItem('eyn_clients', JSON.stringify(up)); } }} className="p-3 text-red-100"><Trash2 className="w-5 h-5"/></button>
+            <button onClick={() => confirmDelete(p.id, p.name, partnerTab)} className="p-3 text-red-100 hover:text-red-500 transition-colors">
+              <Trash2 className="w-5 h-5"/>
+            </button>
           </div>
         ))}
       </div>
+      {deleteTarget && <DeleteConfirmationModal target={deleteTarget} onCancel={() => setDeleteTarget(null)} onConfirm={executeDelete} />}
     </div>
   );
 
@@ -127,6 +161,55 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
       </div>
 
       <button onClick={onLogout} className="w-full mt-6 bg-red-50 text-red-500 py-6 rounded-[2.5rem] font-black uppercase text-[10px] flex items-center justify-center gap-2 border border-red-100 shadow-sm"><LogOut className="w-4 h-4" /> Déconnexion</button>
+    </div>
+  );
+};
+
+interface DeleteModalProps {
+  target: NonNullable<DeleteTarget>;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+const DeleteConfirmationModal: React.FC<DeleteModalProps> = ({ target, onCancel, onConfirm }) => {
+  const labels = {
+    'SUPPLIER': 'le fournisseur',
+    'CLIENT': 'le client',
+    'FAMILY': 'la famille'
+  };
+
+  return (
+    <div className="fixed inset-0 z-[1000] bg-[#111827]/90 backdrop-blur-xl flex items-center justify-center p-6 animate-fade">
+      <div className="bg-white w-full max-w-xs rounded-[3.5rem] p-10 text-center space-y-8 shadow-2xl scale-in-center">
+        <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto shadow-inner">
+          <AlertTriangle className="w-10 h-10" />
+        </div>
+        <div>
+          <h2 className="text-xl font-black text-[#111827] uppercase tracking-tighter italic">CONFIRMATION</h2>
+          <p className="text-[9px] font-bold text-slate-400 mt-4 uppercase tracking-widest leading-relaxed px-2">
+            Êtes-vous sûr de vouloir supprimer {labels[target.type]} : 
+            <br/>
+            <span className="text-[#111827] text-[11px] mt-2 block font-black">"{target.name}" ?</span>
+          </p>
+        </div>
+        <div className="space-y-3 pt-2">
+          <button onClick={onConfirm} className="w-full bg-red-500 text-white py-5 rounded-3xl font-black uppercase text-[10px] tracking-widest shadow-lg active:scale-95 transition-all">
+            OUI, SUPPRIMER
+          </button>
+          <button onClick={onCancel} className="w-full bg-slate-100 text-slate-500 py-5 rounded-3xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all">
+            ANNULER
+          </button>
+        </div>
+      </div>
+      <style>{`
+        .scale-in-center {
+          animation: scale-in-center 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+        }
+        @keyframes scale-in-center {
+          0% { transform: scale(0.8); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };
