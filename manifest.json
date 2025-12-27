@@ -1,0 +1,16 @@
+
+{
+  "name": "EYN POS PRO",
+  "short_name": "EYN PRO",
+  "display": "standalone",
+  "start_url": ".",
+  "background_color": "#0f172a",
+  "theme_color": "#eab308",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3050/3050212.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

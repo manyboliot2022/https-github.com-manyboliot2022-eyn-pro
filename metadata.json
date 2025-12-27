@@ -1,0 +1,7 @@
+{
+  "name": "EYN POS Pro & Calculator",
+  "description": "Système complet de gestion de produits, calculateur de coûts professionnel et point de vente mobile-first pour le commerce de cosmétiques.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

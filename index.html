@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>EYN PRO - Gestion Boutique</title>
+    <meta name="theme-color" content="#eab308">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3050/3050212.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #f8fafc; 
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        #root { height: 100%; width: 100%; }
+        #error-display {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #fff;
+            padding: 20px;
+            z-index: 9999;
+            color: #ef4444;
+            overflow: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.460.0?external=react",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+    <div id="error-display"></div>
+    
+    <script type="module" src="index.tsx"></script>
+    
+    <script>
+      window.onerror = function(msg, url, lineNo, columnNo, error) {
+        const display = document.getElementById('error-display');
+        if (display) {
+          display.style.display = 'block';
+          display.innerHTML = '<h3 style="margin-top:0">Erreur Critique</h3>' + 
+            '<p style="color:black">L\'application n\'a pas pu démarrer.</p>' +
+            '<p><b>Message:</b> ' + msg + '</p>' +
+            '<pre style="background:#f1f5f9;padding:10px;border-radius:8px">' + (error?.stack || 'Pas de stack trace') + '</pre>' +
+            '<button onclick="location.reload()" style="background:#000;color:#fff;padding:10px 20px;border-radius:8px;border:none;font-weight:bold;margin-top:10px">Réessayer</button>';
+        }
+        return false;
+      };
+    </script>
+</body>
+</html>
